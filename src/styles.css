@@ -28,24 +28,27 @@ select {
   padding: 28px;
 }
 
-.workspace {
+.brand-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 22px;
   width: min(1180px, 100%);
   margin: 0 auto;
+  padding: 8px 0 22px;
 }
 
-.topbar {
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: 18px;
-  padding: 8px 0 22px;
+.site-logo {
+  display: block;
+  width: min(280px, 42vw);
+  height: auto;
 }
 
 .eyebrow {
   margin: 0 0 8px;
   color: #53705f;
   font-size: 0.78rem;
-  font-weight: 800;
+  font-weight: 600;
   letter-spacing: 0;
   text-transform: uppercase;
 }
@@ -57,20 +60,12 @@ h1 {
   line-height: 0.98;
 }
 
-.status {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  max-width: 420px;
-  color: #304439;
-  font-size: 0.95rem;
-}
-
 .generator-layout {
   display: grid;
-  grid-template-columns: minmax(0, 1.45fr) minmax(320px, 0.75fr);
   gap: 18px;
   align-items: start;
+  width: min(1180px, 100%);
+  margin: 0 auto;
 }
 
 .panel {
@@ -82,7 +77,7 @@ h1 {
 
 .form-panel {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 16px;
   padding: 18px;
 }
@@ -98,13 +93,13 @@ h1 {
   justify-content: space-between;
   gap: 10px;
   color: #1e2c23;
-  font-weight: 800;
+  font-weight: 600;
 }
 
 .field-heading small {
   color: #6a7a70;
   font-size: 0.78rem;
-  font-weight: 700;
+  font-weight: 600;
 }
 
 select,
@@ -121,20 +116,17 @@ input {
 
 select:focus,
 input:focus {
-  border-color: #2f7c57;
-  box-shadow: 0 0 0 3px rgba(47, 124, 87, 0.16);
+  border-color: #c5202e;
+  box-shadow: 0 0 0 3px rgba(197, 32, 46, 0.16);
 }
 
-.helper {
-  min-height: 34px;
-  color: #637368;
-  font-size: 0.82rem;
-  line-height: 1.35;
+select:disabled {
+  cursor: not-allowed;
+  color: #7b8a80;
+  background: #eef1ee;
 }
 
 .result-panel {
-  position: sticky;
-  top: 18px;
   display: grid;
   gap: 22px;
   padding: 18px;
@@ -187,16 +179,30 @@ button {
   cursor: pointer;
 }
 
+button:disabled {
+  cursor: wait;
+  opacity: 0.72;
+}
+
 .primary-button {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
   flex: 1;
-  background: #2f7c57;
+  background: #c5202e;
   color: #ffffff;
   padding: 0 18px;
-  font-weight: 800;
+  font-weight: 600;
+}
+
+.secondary-button {
+  min-width: 86px;
+  border: 1px solid #b8c3bb;
+  background: #ffffff;
+  color: #24362b;
+  padding: 0 14px;
+  font-weight: 600;
 }
 
 .icon-button {
@@ -207,12 +213,89 @@ button {
   color: #1f5d3e;
 }
 
+.results {
+  display: grid;
+  gap: 10px;
+}
+
+.table-wrap {
+  overflow-x: auto;
+  border: 1px solid #d8ded8;
+  border-radius: 8px;
+}
+
+.pagination-bar {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 14px;
+  color: #41564a;
+  font-size: 0.92rem;
+}
+
+.pagination-actions {
+  display: flex;
+  gap: 8px;
+}
+
+table {
+  width: 100%;
+  min-width: 780px;
+  border-collapse: collapse;
+}
+
+th,
+td {
+  border-bottom: 1px solid #d8ded8;
+  padding: 10px 12px;
+  text-align: left;
+  vertical-align: middle;
+}
+
+th {
+  background: #edf4ef;
+  color: #24362b;
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
+td {
+  color: #26372d;
+  font-size: 0.92rem;
+}
+
+tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.product-code {
+  font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+td img {
+  display: block;
+  width: 72px;
+  height: 72px;
+  object-fit: cover;
+  border: 1px solid #d8ded8;
+  border-radius: 6px;
+  background: #eef1ee;
+}
+
+.empty-state {
+  height: 92px;
+  color: #6a7a70;
+  text-align: center;
+}
+
 @media (max-width: 860px) {
   .app-shell {
     padding: 18px;
   }
 
-  .topbar,
+  .brand-heading,
   .generator-layout {
     display: grid;
   }
@@ -220,9 +303,5 @@ button {
   .generator-layout,
   .form-panel {
     grid-template-columns: 1fr;
-  }
-
-  .result-panel {
-    position: static;
   }
 }

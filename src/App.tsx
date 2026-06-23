@@ -1,103 +1,102 @@
-import { Clipboard, Database, RefreshCw } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
-import { fetchOptions, generateProductCode, type OptionGroups, type ProductCodeInput } from "./api";
+import { Search } from "lucide-react";
+import { useEffect, useState } from "react";
+import {
+  fetchOptions,
+  searchProductCodes,
+  type OptionGroups,
+  type ProductCodeInput,
+  type ProductCodeSearchItem
+} from "./api";
+import ritaWoodLogo from "./assets/rita-wood-logo.png";
+import { defaultOptions } from "./defaultOptions";
 
 const initialInput: ProductCodeInput = {
-  aa: "1",
-  bbb: "A01",
-  cc: "E1",
-  d: "M",
-  eeee: "1",
-  ff: "DM",
-  gg: "01",
-  hh: "01"
+  aa: "",
+  bbb: "",
+  cc: "",
+  d: "",
+  eeee: "",
+  ff: "",
+  gg: "",
+  hh: ""
 };
+
+const pageSize = 50;
 
 const fieldMeta: Array<{
   key: keyof ProductCodeInput;
   label: string;
   length: string;
-  helper: string;
 }> = [
-  { key: "aa", label: "AA", length: "2 ky tu", helper: "Loai khuon, tu dong them 0 neu chi co 1 ky tu." },
-  { key: "bbb", label: "BBB", length: "3 ky tu", helper: "Ma cot van gom 1 chu cai va 2 so." },
-  { key: "cc", label: "CC", length: "2 ky tu", helper: "Tieu chuan Formaldehyde: E0, E1, E2." },
-  { key: "d", label: "D", length: "1 ky tu", helper: "M: Melamine, L: Laminate, A: Acrylic." },
-  { key: "eeee", label: "EEEE", length: "4 ky tu", helper: "Ma giay NCC, tu dong them 0 neu ngan hon 4 ky tu." },
-  { key: "ff", label: "FF", length: "2 ky tu", helper: "Backer: BB, BG, BW, 00 hoac DM." },
-  { key: "gg", label: "GG", length: "2 ky tu", helper: "Kich thuoc theo bang quy doi 03." },
-  { key: "hh", label: "HH", length: "2 ky tu", helper: "Keo dan mat phu theo bang quy doi 04." }
+  { key: "aa", label: "Loại khuôn", length: "AA - 2 ký tự" },
+  { key: "bbb", label: "Mã cốt ván", length: "BBB - 3 ký tự" },
+  { key: "cc", label: "Tiêu chuẩn phát thải", length: "CC - 2 ký tự" },
+  { key: "d", label: "Chất liệu mặt phủ", length: "D - 1 ký tự" },
+  { key: "eeee", label: "Mã giấy NCC", length: "EEEE - 4 ký tự" },
+  { key: "ff", label: "Chất liệu mặt phủ sau", length: "FF - 2 ký tự" },
+  { key: "gg", label: "Kích thước", length: "GG - 2 ký tự" },
+  { key: "hh", label: "Keo dán mặt phủ", length: "HH - 2 ký tự" }
 ];
-
-function previewCode(input: ProductCodeInput) {
-  return [
-    "R",
-    input.aa.toUpperCase().padStart(2, "0"),
-    input.bbb.toUpperCase(),
-    input.cc.toUpperCase(),
-    input.d.toUpperCase(),
-    input.eeee.toUpperCase().padStart(4, "0"),
-    input.ff.toUpperCase(),
-    input.gg.toUpperCase(),
-    input.hh.toUpperCase()
-  ].join("");
-}
 
 export function App() {
   const [form, setForm] = useState<ProductCodeInput>(initialInput);
   const [options, setOptions] = useState<OptionGroups | null>(null);
-  const [result, setResult] = useState("");
-  const [status, setStatus] = useState("Dang tai danh muc...");
-
-  const draftCode = useMemo(() => previewCode(form), [form]);
+  const [items, setItems] = useState<ProductCodeSearchItem[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(0);
+  const [totalItems, setTotalItems] = useState(0);
 
   useEffect(() => {
     fetchOptions()
       .then((data) => {
         setOptions(data);
-        setStatus("Da ket noi backend.");
       })
       .catch((error: Error) => {
-        setStatus(`Chua ket noi duoc API: ${error.message}`);
+        console.warn(error);
+        setOptions(defaultOptions);
       });
   }, []);
 
-  async function handleGenerate() {
-    setStatus("Dang sinh ma...");
-    try {
-      const data = await generateProductCode(form);
-      setResult(data.code);
-      setStatus("Da sinh ma thanh cong.");
-    } catch (error) {
-      setResult("");
-      setStatus(error instanceof Error ? error.message : "Khong the sinh ma.");
+  async function handleSearch(nextPage = 1) {
+    if (isSearching) {
+      return;
     }
-  }
 
-  async function copyCode() {
-    const code = result || draftCode;
-    await navigator.clipboard.writeText(code);
-    setStatus("Da copy ma vao clipboard.");
+    setIsSearching(true);
+
+    try {
+      const data = await searchProductCodes(form, nextPage, pageSize);
+      setItems(data.items);
+      setPage(data.page);
+      setTotalPages(data.totalPages);
+      setTotalItems(data.total);
+    } catch (error) {
+      setItems([]);
+      console.error(error);
+    } finally {
+      setIsSearching(false);
+    }
   }
 
   return (
     <main className="app-shell">
-      <section className="workspace">
-        <div className="topbar">
+      <section>
+        <div className="brand-heading">
           <div>
             <p className="eyebrow">Wood Product Generator</p>
-            <h1>Sinh ma hang tu dong</h1>
+            <h1>Tìm mã sản phẩm</h1>
           </div>
-          <div className="status">
-            <Database size={18} aria-hidden="true" />
-            <span>{status}</span>
-          </div>
+          <img className="site-logo" src={ritaWoodLogo} alt="Rita Võ Wood" />
         </div>
 
         <div className="generator-layout">
           <form className="panel form-panel" onSubmit={(event) => event.preventDefault()}>
             {fieldMeta.map((field) => {
-              const group = options?.[field.key] ?? [];
+              const group =
+                field.key === "eeee" && form.d
+                  ? (options?.eeee ?? []).filter((option) => option.materialCode === form.d)
+                  : options?.[field.key] ?? [];
 
               return (
                 <label className="field" key={field.key}>
@@ -105,53 +104,114 @@ export function App() {
                     <span>{field.label}</span>
                     <small>{field.length}</small>
                   </span>
-                  {group.length > 0 ? (
-                    <select
-                      value={form[field.key]}
-                      onChange={(event) => setForm((current) => ({ ...current, [field.key]: event.target.value }))}
-                    >
-                      {group.map((option) => (
-                        <option value={option.code} key={option.code}>
-                          {option.code} - {option.name}
-                        </option>
-                      ))}
-                    </select>
-                  ) : (
-                    <input
-                      value={form[field.key]}
-                      onChange={(event) => setForm((current) => ({ ...current, [field.key]: event.target.value }))}
-                      spellCheck={false}
-                    />
-                  )}
-                  <span className="helper">{field.helper}</span>
+                  <select
+                    value={form[field.key]}
+                    disabled={field.key === "eeee" && (options?.eeee.length ?? 0) === 0}
+                    onChange={(event) =>
+                      {
+                        setForm((current) => ({
+                          ...current,
+                          [field.key]: event.target.value,
+                          ...(field.key === "d" ? { eeee: "" } : {})
+                        }));
+                        setItems([]);
+                        setPage(1);
+                        setTotalPages(0);
+                        setTotalItems(0);
+                      }
+                    }
+                  >
+                    <option value="">
+                      {field.key === "eeee" && group.length === 0 ? "Chưa có dữ liệu EEEE" : "Tất cả"}
+                    </option>
+                    {group.map((option) => (
+                      <option value={option.code} key={option.code}>
+                        {option.code} - {option.name}
+                        {option.description ? ` (${option.description})` : ""}
+                      </option>
+                    ))}
+                  </select>
                 </label>
               );
             })}
           </form>
 
           <aside className="panel result-panel">
-            <div>
-              <p className="eyebrow">Preview</p>
-              <div className="code-output">{result || draftCode}</div>
-            </div>
-
             <div className="segment-grid">
               {fieldMeta.map((field) => (
                 <div className="segment" key={field.key}>
                   <span>{field.label}</span>
-                  <strong>{form[field.key] || "--"}</strong>
+                  <strong>{form[field.key] || "Tất cả"}</strong>
                 </div>
               ))}
             </div>
 
             <div className="actions">
-              <button type="button" className="primary-button" onClick={handleGenerate}>
-                <RefreshCw size={18} aria-hidden="true" />
-                Sinh ma
+              <button type="button" className="primary-button" onClick={() => handleSearch(1)} disabled={isSearching}>
+                <Search size={18} aria-hidden="true" />
+                {isSearching ? "Đang tìm..." : "Tìm mã sản phẩm"}
               </button>
-              <button type="button" className="icon-button" onClick={copyCode} title="Copy ma">
-                <Clipboard size={19} aria-hidden="true" />
-              </button>
+            </div>
+
+            <div className="results">
+              <p className="eyebrow">Kết quả</p>
+              <div className="table-wrap">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>STT</th>
+                      <th>Mã sản phẩm</th>
+                      <th>Tên sản phẩm</th>
+                      <th>Hình ảnh</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {items.length > 0 ? (
+                      items.map((item) => (
+                        <tr key={`${item.index}-${item.code}`}>
+                          <td>{item.index}</td>
+                          <td className="product-code">{item.code}</td>
+                          <td>{item.name}</td>
+                          <td>
+                            <img src={item.imageUrl} alt={item.name} loading="lazy" />
+                          </td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td colSpan={4} className="empty-state">
+                          Chưa có kết quả.
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+              <div className="pagination-bar">
+                <span>
+                  {totalItems > 0
+                    ? `Trang ${page}/${totalPages} - ${totalItems} sản phẩm`
+                    : "0 sản phẩm"}
+                </span>
+                <div className="pagination-actions">
+                  <button
+                    type="button"
+                    className="secondary-button"
+                    onClick={() => handleSearch(page - 1)}
+                    disabled={isSearching || page <= 1}
+                  >
+                    Trước
+                  </button>
+                  <button
+                    type="button"
+                    className="secondary-button"
+                    onClick={() => handleSearch(page + 1)}
+                    disabled={isSearching || totalPages === 0 || page >= totalPages}
+                  >
+                    Sau
+                  </button>
+                </div>
+              </div>
             </div>
           </aside>
         </div>
